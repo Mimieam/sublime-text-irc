@@ -118,6 +118,17 @@ class IRCClient(client.SimpleIRCClient):
 
         self.connection.privmsg(self.target, msg)
 
+    # def on_quit(self,connection, msg):
+    def on_quit(self):
+
+        self.connection.disconnect(self.quit_message)
+        # self.connection.quit(self.quit_message)
+
+    def on_reconnect(self):
+
+        self.connection.reconnect()
+        
+
     # Commands:
     #
     def command(self, command):

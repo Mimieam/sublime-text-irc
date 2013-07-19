@@ -38,7 +38,16 @@ class IrcConsoleServer(ConsoleServer):
         if command:
             # Send the command to the IRC server:
             #
-            self.irc.write(command)
+            if command[0].lower() != '/':
+                self.irc.write(command)
+            else: 
+                #print('command sent ',command)
+                if command.lower() == '/nick':
+                    self.irc.real_nickname = command.split(' ')[1]
+                if command.lower() == '/quit':
+                    self.irc.on_quit()
+                if command.lower() == '/connect':
+                    self.irc.on_reconnect()
 
             # Now echo the command to the display and clear the line ready for
             # the next command:
