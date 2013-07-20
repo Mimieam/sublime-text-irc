@@ -118,19 +118,24 @@ class IRCClient(client.SimpleIRCClient):
 
         self.connection.privmsg(self.target, msg)
 
-    # def on_quit(self,connection, msg):
     def on_quit(self):
 
         self.connection.disconnect(self.quit_message)
-        # self.connection.quit(self.quit_message)
 
     def on_reconnect(self):
 
         self.connection.reconnect()
         
+    def get_nickname(self):
+        
+        return self.connection.get_nickname()
 
     # Commands:
     #
     def command(self, command):
 
-        self.write(command)
+        if (command.split(' ')[0] == '/nick'):
+            newNick = ' '.join(command.split(" ")[1:])
+            self.connection.nick(newNick) 
+        else:
+            self.write(command)

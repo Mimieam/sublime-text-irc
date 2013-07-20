@@ -2,7 +2,7 @@
 # is inserted it is placed just before the prompt, shifting the prompt down.
 #
 import sublime
-
+from time import strftime
 
 class ConsoleClient(object):
 
@@ -109,4 +109,4 @@ class ConsoleClient(object):
             line = self._view.line(region)
             pos = line.begin()
 
-        self._write(pos, msg + '\n')
+        self._write(pos, '['+strftime("%H:%M")+'] '+msg + '\n')
