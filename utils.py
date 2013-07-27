@@ -17,3 +17,13 @@ def get_setting(key, default=None):
         ret = view.settings().get(key, default)
 
     return ret
+
+def scroll_to(pt=1):
+
+    view = sublime.active_window().active_view()
+
+    if view:
+        view.show(pt)
+
+
+

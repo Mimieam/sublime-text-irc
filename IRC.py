@@ -13,7 +13,7 @@ from imp import reload
 import sublime
 import sublime_plugin
 
-from IRC.utils import get_setting
+from IRC.utils import get_setting, scroll_to
 
 from .irc_client.irc_console_broker import IrcConsoleBroker
 
@@ -117,6 +117,7 @@ class InsertTextCommand(sublime_plugin.TextCommand):
     def run(self, edit, pos, msg):
 
         self.view.insert(edit, pos, msg)
+        scroll_to(pos)
 
 
 # The command that is executed to erase text in the current window:
