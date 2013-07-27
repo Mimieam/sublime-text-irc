@@ -4,6 +4,9 @@ import functools
 
 import sublime
 
+from IRC.utils import get_setting
+from IRC.irc_client.irc_gntp_client import IrcGntpClient
+
 from .irc import client
 
 
@@ -22,7 +25,7 @@ def parse_nickname(nickname):
 
     return nickname.split('!')
 
-
+    
 class IRCClient(client.SimpleIRCClient):
 
     def __init__(self, writer, target, nickname, on_disconnect=None, quit_message='Using sublime IRC.'):
@@ -36,7 +39,8 @@ class IRCClient(client.SimpleIRCClient):
         self.quit_message = quit_message
         self.target = target
         self.writer = writer
-
+        self.growl = IrcGntpClient(self)
+      
     def on_welcome(self, connection, event):
 
         self.writer(' '.join(event.arguments))
@@ -56,11 +60,15 @@ class IRCClient(client.SimpleIRCClient):
 
         def for_threading():
             who, host = parse_nickname(event.source)
-            view = sublime.active_window().active_view()
-            if view and view.settings().get('show_host_in_messages', False):
+            if get_setting('show_host_in_messages', False):
                 self.writer(u'{0} ({1}): {2}'.format(who, host, ' '.join(event.arguments)))
             else:
                 self.writer(u'{0}: {1}'.format(who, ' '.join(event.arguments)))
+                print (u'{0} ({1}vs{2}) : {3}'.format(self.nickname in event.arguments[0], self.nickname,self.connection.get_nickname() ,' '.join(event.arguments)))
+                if self.connection.get_nickname() in event.arguments[0]:
+                    print ('about to notify')
+                    if get_setting('show_prvmsg_in_growl'):
+                        self.growl.quickNotify(u'{0}: {1}'.format(who, ' '.join(event.arguments)))
 
         main_thread(
             for_threading
@@ -83,11 +91,12 @@ class IRCClient(client.SimpleIRCClient):
     def on_join(self, connection, event):
 
         who, host = parse_nickname(event.source)
-        if who == self.nickname:
+        if who == self.get_nickname():
             who_joined = u'You have'
         else:
             who_joined = u'{0} ({1}) has'.format(who, host)
         self.writer(u'*** {0} joined channel {1}'.format(who_joined, event.target))
+
 
     def on_motd(self, connection, event):
 
@@ -99,12 +108,12 @@ class IRCClient(client.SimpleIRCClient):
 
     def on_ping(self, connection, event):
 
-        self.writer(u'*** PING {0}'.format(' '.join(event.arguments)))
+        if get_setting('show_ping_messages', False):
+            self.writer(u'*** PING {0}'.format(' '.join(event.arguments)))
 
     def on_all_raw_messages(self, connection, event):
 
-        view = sublime.active_window().active_view()
-        if view and view.settings().get('show_all_raw_messages', False):
+        if get_setting('show_all_raw_messages', False):
             self.writer(u'*** ARM {0}'.format(' '.join(event.arguments)))
 
     def on_nicknameinuse(self, connection, event):
@@ -115,27 +124,38 @@ class IRCClient(client.SimpleIRCClient):
         self.writer(u'*** Nickname \'{0}\' is already in use on server {1}'.format(self.nickname, event.source))
 
     def write(self, msg):
-
+        if get_setting('show_prvmsg_in_growl'):
+            self.growl.quickNotify('new test growl',msg)
         self.connection.privmsg(self.target, msg)
 
-    def on_quit(self):
-
-        self.connection.disconnect(self.quit_message)
-
-    def on_reconnect(self):
-
-        self.connection.reconnect()
-        
     def get_nickname(self):
-        
+
         return self.connection.get_nickname()
 
     # Commands:
     #
     def command(self, command):
 
-        if (command.split(' ')[0] == '/nick'):
-            newNick = ' '.join(command.split(" ")[1:])
-            self.connection.nick(newNick) 
-        else:
-            self.write(command)
+        conn = self.connection
+
+        tokens = command.split()
+        command = tokens[0].lower()
+
+        # The /nick command either returns the current nickname or sets
+        # a new one:
+        #
+        if command == '/nick':
+            if len(tokens) != 2:
+                self.writer(conn.get_nickname())
+            else:
+                conn.nick(tokens[1])
+                print(conn.get_nickname() != self.nickname , self.nickname)
+                if conn.get_nickname() != self.nickname:  #we need to change the internal name also
+                    self.nickname = conn.get_nickname()
+        # The /quit and /connect commands do what they say on the tin:
+        #
+        if command == '/quit':
+            conn.quit(self.quit_message)
+
+        if command == '/connect':
+            conn.reconnect()

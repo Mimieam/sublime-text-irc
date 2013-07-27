@@ -1,6 +1,7 @@
 {
 	"port": 6667,
-	// "nickname": "A default nickname",
+	
+	"nickname": "Miezel_Test",
 
 	/**
 	 * Show all raw messages, mainly useful for debugging:
@@ -9,10 +10,28 @@
 	"show_all_raw_messages": false,
 
 	/**
+	 * Show ping messages, mainly useful for debugging:
+	 */
+
+	"show_ping_messages": false,
+
+	/**
 	 * Show the host in messages, alongside the nickname:
 	 */
 
 	"show_host_in_messages": false,
+
+	/**
+	 * Show the time in messages, alongside the nickname:
+	 */
+
+	"show_timestamp_in_messages": true,
+
+	/**
+	 * notify user of private mesage thru growl:
+	 */
+
+	"show_prvmsg_in_growl": true,
 
 	/**
 	 * These values aren't yet implemented, but are ideas for things
