@@ -41,7 +41,6 @@ class GrowlNotifier(object):
 
 	passwordHash = 'MD5'
 	socketTimeout = 3
-	print("In GrowlNotifier")
 
 	def __init__(self, applicationName='Python GNTP', notifications=[],
 			defaultNotifications=None, applicationIcon=None, hostname='localhost',

@@ -61,7 +61,6 @@ class IrcCommand(sublime_plugin.WindowCommand):
         #
         if nickname is None:
             nickname = get_setting('nickname')
-            print ("no nickname !!!! new : ",get_setting('nickname'))
 
             # If we still have no nickname then ask the OS:
             #

@@ -64,9 +64,7 @@ class IRCClient(client.SimpleIRCClient):
                 self.writer(u'{0} ({1}): {2}'.format(who, host, ' '.join(event.arguments)))
             else:
                 self.writer(u'{0}: {1}'.format(who, ' '.join(event.arguments)))
-                print (u'{0} ({1}vs{2}) : {3}'.format(self.nickname in event.arguments[0], self.nickname,self.connection.get_nickname() ,' '.join(event.arguments)))
                 if self.connection.get_nickname() in event.arguments[0]:
-                    print ('about to notify')
                     if get_setting('show_prvmsg_in_growl'):
                         self.growl.quickNotify(u'{0}: {1}'.format(who, ' '.join(event.arguments)))
 
@@ -124,8 +122,7 @@ class IRCClient(client.SimpleIRCClient):
         self.writer(u'*** Nickname \'{0}\' is already in use on server {1}'.format(self.nickname, event.source))
 
     def write(self, msg):
-        if get_setting('show_prvmsg_in_growl'):
-            self.growl.quickNotify('new test growl',msg)
+       
         self.connection.privmsg(self.target, msg)
 
     def get_nickname(self):
@@ -160,37 +157,50 @@ class IRCClient(client.SimpleIRCClient):
         if command == '/connect':
             conn.reconnect()
 
+        #The /join command connect to a new channel but currently does not make use of the previous settings as such the followings are allowed , but a drawback is that is currently allow the same user to connect on the same channel with multiple names...
+        #
+        #   /join #channel
+        #   /join #channel server nickname
+        #   /join #channel server nickname port   
+
         if command == '/join':
-            if len(tokens) > 1:
+            length = len(tokens)
+            if length > 1:
                 from ..irc_console_broker import IrcConsoleBroker
                 from IRC.IRC import brokers
-                # conn.join(tokens[1])
 
-               
+                server,port,nickname = None, None, None 
+                if length >= 3: server   = tokens[2] 
+                if length >= 4: nickname = tokens[3] 
+                if length == 5: port     = tokens[4] 
+
 
                 # Let the base class do its work:
+                #can't seems to get server and port from the settings so default values are added for now to avoid connection errors
                 data = {
-                    'target':tokens[1] ,
-                    'server': get_setting('server'), 
-                    'port':  get_setting('port'),
-                    'nickname':  get_setting('nickname')
+                    'target'  : tokens[1] ,
+                    'server'  : server   or get_setting('server') or 'irc.freenode.net', 
+                    'port'    : port     or get_setting('port')   or 6667,
+                    'nickname': nickname or get_setting('nickname')
                 }
-
-                print (data)
-                #can't seems to get server and port from the settings so they are hard coded for testing
-
-                data['server'] = 'irc.freenode.net'
 
                 view = sublime.active_window().new_file()
                 view.set_scratch(True)
-                # self.connection()
 
-
-                name = '{0}:{1}{2}'.format(data['server'], data['port'], data['target'])
+                name = '{0} {1}:{2}'.format(data['target'], data['server'], data['port'])
 
                 brokers[name] = IrcConsoleBroker(name,  data['target'], view, data['server'], data['port'], data['nickname'])
 
 
-                # IrcConsoleClient(data['target'], view, data)
-                # ConsoleClient.__init__(self, name, view, client_type='IRC', data=data)
+        if command == '/msg':
+            target,prvmsg = None, None 
+            
+            if len(tokens) >= 3: 
+                target   = tokens[1] 
+                prvmsg = " ".join(tokens[2:])
+                conn.privmsg(target, prvmsg)
+                print ('done sending prvmsg: ',prvmsg)
+                
+
+
 
