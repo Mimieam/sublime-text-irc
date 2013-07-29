@@ -149,13 +149,48 @@ class IRCClient(client.SimpleIRCClient):
                 self.writer(conn.get_nickname())
             else:
                 conn.nick(tokens[1])
-                print(conn.get_nickname() != self.nickname , self.nickname)
+          #      print(conn.get_nickname() != self.nickname , self.nickname)
                 if conn.get_nickname() != self.nickname:  #we need to change the internal name also
                     self.nickname = conn.get_nickname()
-        # The /quit and /connect commands do what they say on the tin:
+        # The /quit and /connect commands do what they say on the tin:  
         #
         if command == '/quit':
             conn.quit(self.quit_message)
 
         if command == '/connect':
             conn.reconnect()
+
+        if command == '/join':
+            if len(tokens) > 1:
+                from ..irc_console_broker import IrcConsoleBroker
+                from IRC.IRC import brokers
+                # conn.join(tokens[1])
+
+               
+
+                # Let the base class do its work:
+                data = {
+                    'target':tokens[1] ,
+                    'server': get_setting('server'), 
+                    'port':  get_setting('port'),
+                    'nickname':  get_setting('nickname')
+                }
+
+                print (data)
+                #can't seems to get server and port from the settings so they are hard coded for testing
+
+                data['server'] = 'irc.freenode.net'
+
+                view = sublime.active_window().new_file()
+                view.set_scratch(True)
+                # self.connection()
+
+
+                name = '{0}:{1}{2}'.format(data['server'], data['port'], data['target'])
+
+                brokers[name] = IrcConsoleBroker(name,  data['target'], view, data['server'], data['port'], data['nickname'])
+
+
+                # IrcConsoleClient(data['target'], view, data)
+                # ConsoleClient.__init__(self, name, view, client_type='IRC', data=data)
+
